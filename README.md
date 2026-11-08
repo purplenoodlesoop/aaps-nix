@@ -10,8 +10,6 @@ and signs their own app.
 ## Use
 
 ```sh
-export ANDROID_HOME="$HOME/Android/Sdk"
-
 nix run .#build
 nix run .#sign -- ~/aaps.jks aaps out/aaps-4.0.0-unsigned.apk
 nix run .#verify -- '<certificate sha256>' out/aaps-4.0.0.apk
@@ -36,14 +34,19 @@ Moves the pin in `flake.nix` and `flake.lock`. Review the diff and commit.
 
 ## What Nix does and does not do
 
-Nix pins the AndroidAPS revision, supplies JDK 21, `git` and `apksigner`, and
-runs every step as a task.
+Nix pins the AndroidAPS revision, supplies JDK 21, `git`, `apksigner` and the
+Android SDK, and runs every step as a task. No SDK needs to be installed and
+`ANDROID_HOME` is ignored.
 
-It does not supply the Android SDK and does not resolve Gradle dependencies.
-`ANDROID_HOME` must point at an installed SDK with its licences accepted; Gradle
-downloads any missing platform itself. Pinning the few thousand Maven artifacts
+The SDK is `androidenv` with exactly the platform and build tools the pinned
+release asks for (`nix/android-sdk.nix`). It is read-only, so when an update
+needs a different version the build fails instead of downloading it; add the
+version there. Building the SDK accepts Google's Android SDK licence, and only
+packages from `androidenv` are allowed as unfree.
+
+Gradle dependencies are not pinned. Pinning the few thousand Maven artifacts
 AndroidAPS depends on for an offline sandbox build would cost far more than it
-returns, so `build` is a task, not a package.
+returns, so `build` is a task, not a package, and Gradle downloads them itself.
 
 ## Why the build checks out its own clone
 

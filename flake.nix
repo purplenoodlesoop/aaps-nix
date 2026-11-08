@@ -19,8 +19,14 @@
     lib.evalFlake {
       specialArgs = { inherit aaps-src; };
 
+      config = {
+        android_sdk.accept_license = true;
+        allowUnfreePredicate = pkg: (pkg.meta.homepage or "") == "https://developer.android.com/tools";
+      };
+
       perSystem.imports = with nixosModules; [
         tasks
+        ./nix/android-sdk.nix
         ./nix/checks.nix
         ./nix/tasks.nix
       ];

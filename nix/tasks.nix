@@ -1,5 +1,11 @@
-{ pkgs, aaps-src, ... }:
+{
+  pkgs,
+  config,
+  aaps-src,
+  ...
+}:
 let
+  sdk = "${config.flake.packages.android-sdk}/libexec/android-sdk";
   git = "${pkgs.git}/bin/git";
   apksigner = "${pkgs.apksigner}/bin/apksigner";
   remote = "https://github.com/nightscout/AndroidAPS.git";
@@ -11,11 +17,6 @@ in
       body = ''
         set -euo pipefail
         root="$(${git} rev-parse --show-toplevel)"
-
-        if [ -z "''${ANDROID_HOME:-}" ]; then
-          echo "ANDROID_HOME must point at an Android SDK" >&2
-          exit 2
-        fi
 
         rev="${aaps-src.rev}"
         work="''${AAPS_WORKDIR:-''${XDG_CACHE_HOME:-$HOME/.cache}/aaps-nix/AndroidAPS}"
@@ -49,6 +50,8 @@ in
         cpus="$(getconf _NPROCESSORS_ONLN)"
         workers="''${AAPS_GRADLE_WORKERS:-$(( cpus > 1 ? cpus / 2 : 1 ))}"
 
+        export ANDROID_HOME="${sdk}"
+        unset ANDROID_SDK_ROOT
         export JAVA_HOME="${pkgs.temurin-bin-21.home}"
         export PATH="$JAVA_HOME/bin:${pkgs.git}/bin:$PATH"
 
